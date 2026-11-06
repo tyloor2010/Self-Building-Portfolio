@@ -1,124 +1,226 @@
 import { useEffect, useRef, useState } from "react";
-import { RotateCcw } from "lucide-react";
+import { RotateCcw, FastForward, Volume2 } from "lucide-react";
 
-const COLORS = ["var(--primary)", "var(--signal)", "oklch(0.85 0.17 90)", "oklch(0.75 0.18 150)", "oklch(0.75 0.17 330)"];
+/*
+ * "Live build" tour: several agents (cursors) build the page in parallel.
+ * Text is typed line-by-line (clip-path polygon + caret), images/frames are
+ * drawn by resizing from the corner, headings are dragged into place.
+ */
+
+const COLORS = ["oklch(0.72 0.15 235)", "oklch(0.85 0.17 90)", "oklch(0.75 0.18 150)", "oklch(0.75 0.17 330)", "oklch(0.7 0.2 30)", "oklch(0.8 0.12 200)"];
 const AGENTS = 18;
-type Box = { x: number; y: number; w: number; h: number; label: string } | null;
+const WORKERS = 5;
+const LEAF = "h1,h2,h3,h4,p,li,blockquote,img,button,a,span";
+const FRAME = "nav,article,[data-frame]";
+
+type Kind = "text" | "img" | "frame" | "drag";
+type Job = { el: HTMLElement; kind: Kind; start: number; dur: number; lines: { t: number; b: number; l: number; r: number }[]; label: string };
+type Worker = { color: string; x: number; y: number; job: Job | null };
+type Snap = { workers: { color: string; x: number; y: number; box: DOMRect | null; label: string; caret: { x: number; y: number; h: number } | null; kind: Kind | null }[]; idle: { x: number; y: number; c: string }[] };
+
+function kindOf(el: HTMLElement): Kind {
+  if (el.matches(FRAME)) return "frame";
+  if (el.tagName === "IMG") return "img";
+  if (el.tagName === "H1" || el.tagName === "H2") return "drag";
+  if ((el.tagName === "BUTTON" || el.tagName === "A") && /border|bg-primary|bg-signal/.test(el.className)) return "frame";
+  return "text";
+}
+const NAMES: Record<string, string> = { H1: "Heading", H2: "Heading", H3: "Heading", H4: "Heading", P: "Text", LI: "List item", IMG: "Image", BUTTON: "Button", A: "Link", SPAN: "Text", NAV: "Navbar", ARTICLE: "Card", BLOCKQUOTE: "Quote", DIV: "Frame" };
+
+function measureLines(el: HTMLElement) {
+  const r = el.getBoundingClientRect();
+  const range = document.createRange();
+  range.selectNodeContents(el);
+  const rows: { t: number; b: number; l: number; r: number }[] = [];
+  for (const c of Array.from(range.getClientRects())) {
+    if (c.width < 1) continue;
+    const t = c.top - r.top, b = c.bottom - r.top;
+    const row = rows.find((x) => Math.abs(x.t - t) < 4 || (t >= x.t && t < x.b - 2));
+    if (row) { row.l = Math.min(row.l, c.left - r.left); row.r = Math.max(row.r, c.right - r.left); row.t = Math.min(row.t, t); row.b = Math.max(row.b, b); }
+    else rows.push({ t, b, l: c.left - r.left, r: c.right - r.left });
+  }
+  return rows.sort((a, b) => a.t - b.t);
+}
+
+const ease = (p: number) => 1 - Math.pow(1 - p, 3);
 
 export function BuildTour() {
-  const [box, setBox] = useState<Box>(null);
-  const [t, setT] = useState(0);
+  const [snap, setSnap] = useState<Snap>({ workers: [], idle: [] });
   const [phase, setPhase] = useState<"building" | "done">("building");
-  const [progress, setProgress] = useState(0);
+  const [done, setDone] = useState(0);
+  const [total, setTotal] = useState(0);
   const [elapsed, setElapsed] = useState(0);
-  const run = useRef(0);
-  const active = useRef<HTMLElement | null>(null);
+  const [speed, setSpeed] = useState(1);
+  const [touring, setTouring] = useState(true);
+  const s = useRef({ queue: [] as HTMLElement[], all: [] as HTMLElement[], workers: [] as Worker[], sim: 0, done: 0, running: false, speed: 1, touring: true, t0: 0 });
 
-  // animation clock + keep box glued to the active element while scrolling
+  useEffect(() => { s.current.speed = speed; }, [speed]);
+  useEffect(() => { s.current.touring = touring; }, [touring]);
+
+  const reset = (el: HTMLElement) => { el.style.clipPath = ""; el.style.transform = ""; el.style.filter = ""; el.style.opacity = ""; };
+
+  const start = () => {
+    const main = document.querySelector("main");
+    if (!main) return;
+    const st = s.current;
+    st.all.forEach(reset);
+    const all = Array.from(main.querySelectorAll<HTMLElement>(`${FRAME},${LEAF}`)).filter((el) => {
+      if (el.closest("[data-tour-ui]")) return false;
+      if (el.matches(FRAME)) return true;
+      const anc = el.parentElement?.closest(LEAF);
+      if (anc && main.contains(anc)) return false;
+      const r = el.getBoundingClientRect();
+      return r.width > 0 && r.height > 0;
+    });
+    all.forEach((el) => { el.style.opacity = "0"; });
+    (main as HTMLElement).style.opacity = "1";
+    st.all = all; st.queue = [...all]; st.done = 0; st.sim = 0; st.running = true; st.t0 = performance.now();
+    st.workers = Array.from({ length: WORKERS }, (_, i) => ({ color: COLORS[i % COLORS.length]!, x: window.innerWidth / 2, y: window.innerHeight + 40, job: null }));
+    window.scrollTo({ top: 0 });
+    setTotal(all.length); setDone(0); setPhase("building"); setTouring(true);
+  };
+
+  const finish = () => {
+    const st = s.current;
+    st.all.forEach(reset);
+    st.queue = []; st.workers.forEach((w) => (w.job = null)); st.running = false;
+    setDone(st.all.length); setElapsed((performance.now() - st.t0) / 1000); setPhase("done");
+  };
+
   useEffect(() => {
-    let raf = 0;
-    const loop = (ms: number) => {
-      setT(ms / 1000);
-      const el = active.current;
-      if (el) {
-        const r = el.getBoundingClientRect();
-        setBox((b) => ({ x: r.left, y: r.top, w: r.width, h: r.height, label: b?.label ?? "" }));
+    const h = setTimeout(start, 300);
+    const stopTour = () => setTouring(false);
+    window.addEventListener("wheel", stopTour, { passive: true });
+    window.addEventListener("touchmove", stopTour, { passive: true });
+    let raf = 0, last = performance.now();
+    const loop = (now: number) => {
+      const st = s.current;
+      const dt = Math.min(50, now - last) * st.speed; last = now;
+      st.sim += dt;
+      const t = now / 1000;
+      const out: Snap["workers"] = [];
+      let lowest = Infinity;
+
+      if (st.running) {
+        for (const w of st.workers) {
+          if (!w.job && st.queue.length) {
+            const el = st.queue.shift()!;
+            const kind = kindOf(el);
+            const len = (el.textContent || "").trim().length;
+            const dur = kind === "text" ? Math.min(2400, Math.max(350, len * 22)) : kind === "img" ? 1500 : kind === "drag" ? 900 : 550;
+            el.style.opacity = "1";
+            el.style.clipPath = "inset(0 100% 100% 0)";
+            w.job = { el, kind, start: st.sim + 260, dur, lines: kind === "text" ? measureLines(el) : [], label: NAMES[el.tagName] || "Layer" };
+          }
+          const j = w.job;
+          if (!j) { out.push({ color: w.color, x: w.x, y: w.y, box: null, label: "", caret: null, kind: null }); continue; }
+          const r = j.el.getBoundingClientRect();
+          const p = Math.max(0, Math.min(1, (st.sim - j.start) / j.dur));
+          let tx = r.left, ty = r.top, caret: Snap["workers"][number]["caret"] = null;
+
+          if (j.kind === "text") {
+            const L = j.lines.length ? j.lines : [{ t: 0, b: r.height, l: 0, r: r.width }];
+            const tot = L.reduce((a, l) => a + (l.r - l.l), 0) || 1;
+            let acc = p * tot, i = 0;
+            while (i < L.length - 1 && acc > L[i]!.r - L[i]!.l) { acc -= L[i]!.r - L[i]!.l; i++; }
+            const ln = L[i]!;
+            const x = ln.l + Math.min(acc, ln.r - ln.l);
+            j.el.style.clipPath = p >= 1 ? "" : `polygon(0 0, 100% 0, 100% ${ln.t}px, ${x}px ${ln.t}px, ${x}px ${ln.b}px, 0 ${ln.b}px, 0 ${ln.t}px, 0 0)`;
+            if (i === 0) j.el.style.clipPath = p >= 1 ? "" : `polygon(0 ${ln.t}px, ${x}px ${ln.t}px, ${x}px ${ln.b}px, 0 ${ln.b}px)`;
+            caret = { x: r.left + x, y: r.top + ln.t, h: ln.b - ln.t };
+            tx = r.left + x + 4; ty = r.top + ln.b - 2;
+          } else if (j.kind === "img" || j.kind === "frame") {
+            const e = ease(p);
+            j.el.style.clipPath = `inset(0 ${(1 - e) * 100}% ${(1 - e) * 100}% 0)`;
+            if (j.kind === "img") j.el.style.filter = p < 0.7 ? "grayscale(1) brightness(0.35)" : "";
+            tx = r.left + r.width * Math.max(e, 0.05); ty = r.top + r.height * Math.max(e, 0.05);
+          } else {
+            const e = ease(p);
+            j.el.style.clipPath = st.sim < j.start ? "inset(0 100% 100% 0)" : "";
+            j.el.style.transform = `translate(${(1 - e) * -70}px, ${(1 - e) * 40}px)`;
+            tx = r.left + 24; ty = r.top + r.height / 2;
+          }
+          // cursor flies toward its target
+          const k = st.sim < j.start ? 0.18 : 0.5;
+          w.x += (tx - w.x) * k; w.y += (ty - w.y) * k;
+          lowest = Math.min(lowest, r.top);
+          out.push({ color: w.color, x: w.x, y: w.y, box: r, label: j.label, caret: j.kind === "text" && st.sim >= j.start ? caret : null, kind: j.kind });
+
+          if (p >= 1) { reset(j.el); w.job = null; st.done++; }
+        }
+        if (st.done !== done) setDone(st.done);
+        if (!st.queue.length && st.workers.every((w) => !w.job)) finish();
+
+        // auto-scroll ("Touring") — keep the active work in view
+        if (st.touring && lowest !== Infinity) {
+          const target = lowest - window.innerHeight * 0.35;
+          if (Math.abs(target) > 4) window.scrollTo(0, window.scrollY + target * 0.06);
+        }
       }
+
+      const idle = Array.from({ length: st.running ? 7 : 12 }, (_, i) => ({
+        x: window.innerWidth / 2 + Math.sin(t * 0.3 + i * 1.7) * window.innerWidth * 0.42,
+        y: window.innerHeight / 2 + Math.cos(t * 0.25 + i * 2.3) * window.innerHeight * 0.4,
+        c: COLORS[i % COLORS.length]!,
+      }));
+      setSnap({ workers: out, idle });
       raf = requestAnimationFrame(loop);
     };
     raf = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(raf);
+    return () => { clearTimeout(h); cancelAnimationFrame(raf); window.removeEventListener("wheel", stopTour); window.removeEventListener("touchmove", stopTour); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const start = async () => {
-    const id = ++run.current;
-    const els = Array.from(document.querySelectorAll<HTMLElement>("[data-build]"));
-    els.forEach((el) => { el.style.transition = "opacity .5s, transform .5s"; el.style.opacity = "0"; el.style.transform = "translateY(12px)"; });
-    setPhase("building");
-    window.scrollTo({ top: 0 });
-    const t0 = performance.now();
-    const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
-    for (let i = 0; i < els.length; i++) {
-      if (id !== run.current) return;
-      const el = els[i]!;
-      const r = el.getBoundingClientRect();
-      if (r.top < 80 || r.bottom > window.innerHeight - 80)
-        window.scrollTo({ top: window.scrollY + r.top - window.innerHeight / 3, behavior: "smooth" });
-      active.current = el;
-      setBox({ x: r.left, y: r.top, w: r.width, h: r.height, label: el.dataset["build"] || "" });
-      await wait(380);
-      el.style.opacity = "1"; el.style.transform = "none";
-      setProgress((i + 1) / els.length);
-      setElapsed((performance.now() - t0) / 1000);
-      await wait(420);
-    }
-    active.current = null;
-    setBox(null);
-    setPhase("done");
-  };
-
-  useEffect(() => { const h = setTimeout(start, 500); return () => { clearTimeout(h); run.current++; }; }, []);
-
-  const cx = box ? box.x + box.w / 2 : 0;
-  const cy = box ? box.y + box.h / 2 : 0;
+  const Cursor = ({ x, y, c }: { x: number; y: number; c: string }) => (
+    <svg width="15" height="15" viewBox="0 0 24 24" className="absolute drop-shadow" style={{ left: x, top: y, color: c }}>
+      <path d="M3 2l18 9-8 2-3 8z" fill="currentColor" stroke="black" strokeWidth="1" />
+    </svg>
+  );
 
   return (
-    <>
-      {/* swarm cursors */}
+    <div data-tour-ui>
       <div className="pointer-events-none fixed inset-0 z-40 overflow-hidden">
-        {Array.from({ length: 14 }).map((_, i) => {
-          const vw = typeof window !== "undefined" ? window.innerWidth : 1280;
-          const vh = typeof window !== "undefined" ? window.innerHeight : 800;
-          let x: number, y: number;
-          if (box) {
-            const a = (i / 14) * Math.PI * 2 + t * 0.8;
-            x = cx + Math.cos(a) * (box.w / 2 + 20) * (0.6 + 0.4 * Math.sin(t + i));
-            y = cy + Math.sin(a) * (box.h / 2 + 20) * (0.6 + 0.4 * Math.cos(t + i));
-          } else {
-            x = vw / 2 + Math.sin(t * 0.3 + i * 1.7) * vw * 0.42;
-            y = vh / 2 + Math.cos(t * 0.25 + i * 2.3) * vh * 0.4;
-          }
-          return (
-            <svg key={i} width="14" height="14" viewBox="0 0 24 24" className="absolute drop-shadow transition-[left,top] duration-500 ease-out"
-              style={{ left: x, top: y, color: COLORS[i % COLORS.length] }}>
-              <path d="M3 2l18 9-8 2-3 8z" fill="currentColor" />
-            </svg>
-          );
-        })}
+        {snap.idle.map((c, i) => <Cursor key={`i${i}`} {...c} />)}
+        {snap.workers.map((w, i) => w.box && (
+          <div key={`b${i}`} className={`absolute border ${w.kind === "text" ? "border-signal bg-signal/5" : "border-signal"}`}
+            style={{ left: w.box.left - 4, top: w.box.top - 4, width: w.box.width + 8, height: w.box.height + 8 }}>
+            {w.kind !== "text" && ["-left-1 -top-1", "-right-1 -top-1", "-left-1 -bottom-1", "-right-1 -bottom-1"].map((p) => (
+              <span key={p} className={`absolute h-2 w-2 border border-signal bg-background ${p}`} />
+            ))}
+            {w.kind === "frame" || w.kind === "drag" ? <span className="absolute -right-4 -top-4 font-mono text-sm text-foreground">+</span> : null}
+            <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-sm bg-signal px-1 font-mono text-[9px] font-bold text-background">
+              {Math.round(w.box.width)} × {Math.round(w.box.height)}
+            </span>
+            <span className="absolute -top-5 left-0 whitespace-nowrap rounded-sm px-1 font-mono text-[9px] font-bold text-background" style={{ background: w.color }}>{w.label}</span>
+          </div>
+        ))}
+        {snap.workers.map((w, i) => w.caret && (
+          <span key={`c${i}`} className="absolute w-[2px] animate-blink bg-signal" style={{ left: w.caret.x, top: w.caret.y, height: w.caret.h }} />
+        ))}
+        {snap.workers.map((w, i) => w.box && <Cursor key={`w${i}`} x={w.x} y={w.y} c={w.color} />)}
       </div>
 
-      {/* editor-style selection box */}
-      {box && (
-        <div className="pointer-events-none fixed z-40 border-2 border-signal transition-all duration-300 ease-out"
-          style={{ left: box.x - 6, top: box.y - 6, width: box.w + 12, height: box.h + 12 }}>
-          {[["-left-1.5 -top-1.5"], ["-right-1.5 -top-1.5"], ["-left-1.5 -bottom-1.5"], ["-right-1.5 -bottom-1.5"]].map(([p]) => (
-            <span key={p} className={`absolute h-2.5 w-2.5 border-2 border-signal bg-background ${p}`} />
-          ))}
-          <span className="absolute -top-6 left-0 whitespace-nowrap bg-signal px-1.5 py-0.5 font-mono text-[10px] font-bold text-background">{box.label}</span>
-          <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap bg-signal px-1.5 py-0.5 font-mono text-[10px] text-background">
-            {Math.round(box.w)} × {Math.round(box.h)}
-          </span>
-        </div>
-      )}
-
-      {/* status bar */}
-      <div className="fixed bottom-4 left-1/2 z-50 flex -translate-x-1/2 items-center gap-3 rounded-full border bg-card/90 px-4 py-2 font-mono text-[11px] backdrop-blur">
-        <span className="flex -space-x-1">{COLORS.map((c) => <span key={c} className="h-2.5 w-2.5 rounded-full border border-card" style={{ background: c }} />)}</span>
+      <div className="fixed bottom-3 left-1/2 z-50 flex max-w-[calc(100vw-1rem)] -translate-x-1/2 items-center gap-2.5 rounded-full border bg-card/95 px-3 py-1.5 font-mono text-[10px] backdrop-blur sm:gap-3 sm:text-[11px]">
+        <span className="flex -space-x-1">{COLORS.slice(0, 5).map((c) => <span key={c} className="h-2.5 w-2.5 rounded-full border border-card" style={{ background: c }} />)}</span>
         {phase === "building" ? (
           <>
-            <span><b>{AGENTS}</b> agents</span>
-            <span className="h-1 w-24 overflow-hidden rounded-full bg-muted"><span className="block h-full bg-signal transition-all" style={{ width: `${progress * 100}%` }} /></span>
-            <span className="text-signal">Building<span className="animate-blink">_</span></span>
+            <span className="whitespace-nowrap"><b>{AGENTS}</b> agents</span>
+            <span className="hidden whitespace-nowrap text-muted-foreground sm:inline"><b className="text-foreground">{done}</b> / {total} layers</span>
+            <span className="hidden h-1 w-16 overflow-hidden rounded-full bg-muted sm:block"><span className="block h-full bg-signal" style={{ width: `${total ? (done / total) * 100 : 0}%` }} /></span>
+            <button onClick={() => setTouring((v) => !v)} className={`rounded-full px-2 py-0.5 ${touring ? "bg-signal/20 text-signal" : "text-muted-foreground"}`}>Touring</button>
+            <button onClick={() => setSpeed((v) => (v === 1 ? 2 : v === 2 ? 4 : 1))} className="rounded-full px-1.5 py-0.5 text-muted-foreground hover:text-foreground">{speed}x</button>
+            <Volume2 className="hidden h-3 w-3 text-muted-foreground sm:block" />
+            <button onClick={finish} aria-label="Skip" className="text-muted-foreground hover:text-foreground"><FastForward className="h-3 w-3" /></button>
           </>
         ) : (
           <>
-            <span>Rebuilt by <b>{AGENTS}</b> agents in <b>{elapsed.toFixed(1)}s</b></span>
-            <button onClick={start} className="pointer-events-auto flex items-center gap-1 rounded-full bg-signal px-2.5 py-0.5 font-bold text-background">
+            <span className="whitespace-nowrap">Rebuilt by <b>{AGENTS}</b> agents in <b>{elapsed.toFixed(1)}s</b></span>
+            <button onClick={start} className="flex items-center gap-1 rounded-full bg-signal px-2.5 py-0.5 font-bold text-background">
               <RotateCcw className="h-3 w-3" /> Replay
             </button>
           </>
         )}
       </div>
-    </>
+    </div>
   );
 }
