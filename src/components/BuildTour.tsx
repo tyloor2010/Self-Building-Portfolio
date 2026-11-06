@@ -15,7 +15,7 @@ const FRAME = "nav,article,[data-frame]";
 
 type Kind = "text" | "img" | "frame" | "drag";
 type Job = { el: HTMLElement; kind: Kind; start: number; dur: number; lines: { t: number; b: number; l: number; r: number }[]; label: string };
-type Worker = { color: string; x: number; y: number; job: Job | null };
+type Worker = { color: string; x: number; y: number; job: Job | null; cool: number };
 type Snap = { workers: { color: string; x: number; y: number; box: DOMRect | null; label: string; caret: { x: number; y: number; h: number } | null; kind: Kind | null }[]; idle: { x: number; y: number; c: string }[] };
 
 function kindOf(el: HTMLElement): Kind {
@@ -75,7 +75,7 @@ export function BuildTour() {
     all.forEach((el) => { el.style.opacity = "0"; });
     (main as HTMLElement).style.opacity = "1";
     st.all = all; st.queue = [...all]; st.done = 0; st.sim = 0; st.running = true; st.t0 = performance.now();
-    st.workers = Array.from({ length: WORKERS }, (_, i) => ({ color: COLORS[i % COLORS.length]!, x: window.innerWidth / 2, y: window.innerHeight + 40, job: null }));
+    st.workers = Array.from({ length: WORKERS }, (_, i) => ({ color: COLORS[i % COLORS.length]!, x: window.innerWidth / 2, y: window.innerHeight + 40, job: null, cool: 0 }));
     window.scrollTo({ top: 0 });
     setTotal(all.length); setDone(0); setPhase("building"); setTouring(true);
   };
@@ -103,14 +103,14 @@ export function BuildTour() {
 
       if (st.running) {
         for (const w of st.workers) {
-          if (!w.job && st.queue.length) {
+          if (!w.job && st.queue.length && st.sim >= w.cool) {
             const el = st.queue.shift()!;
             const kind = kindOf(el);
             const len = (el.textContent || "").trim().length;
-            const dur = kind === "text" ? Math.min(2400, Math.max(350, len * 22)) : kind === "img" ? 1500 : kind === "drag" ? 900 : 550;
+            const dur = kind === "text" ? Math.min(5600, Math.max(1100, len * 62)) : kind === "img" ? 3400 : kind === "drag" ? 2200 : 1500;
             el.style.opacity = "1";
             el.style.clipPath = "inset(0 100% 100% 0)";
-            w.job = { el, kind, start: st.sim + 260, dur, lines: kind === "text" ? measureLines(el) : [], label: NAMES[el.tagName] || "Layer" };
+            w.job = { el, kind, start: st.sim + 520, dur, lines: kind === "text" ? measureLines(el) : [], label: NAMES[el.tagName] || "Layer" };
           }
           const j = w.job;
           if (!j) { out.push({ color: w.color, x: w.x, y: w.y, box: null, label: "", caret: null, kind: null }); continue; }
@@ -141,12 +141,12 @@ export function BuildTour() {
             tx = r.left + 24; ty = r.top + r.height / 2;
           }
           // cursor flies toward its target
-          const k = st.sim < j.start ? 0.18 : 0.5;
+          const k = st.sim < j.start ? 0.08 : 0.24;
           w.x += (tx - w.x) * k; w.y += (ty - w.y) * k;
           lowest = Math.min(lowest, r.top);
           out.push({ color: w.color, x: w.x, y: w.y, box: r, label: j.label, caret: j.kind === "text" && st.sim >= j.start ? caret : null, kind: j.kind });
 
-          if (p >= 1) { reset(j.el); w.job = null; st.done++; }
+          if (p >= 1) { reset(j.el); w.job = null; w.cool = st.sim + 320; st.done++; }
         }
         if (st.done !== done) setDone(st.done);
         if (!st.queue.length && st.workers.every((w) => !w.job)) finish();
@@ -154,7 +154,7 @@ export function BuildTour() {
         // auto-scroll ("Touring") — keep the active work in view
         if (st.touring && lowest !== Infinity) {
           const target = lowest - window.innerHeight * 0.35;
-          if (Math.abs(target) > 4) window.scrollTo(0, window.scrollY + target * 0.06);
+          if (Math.abs(target) > 4) window.scrollTo(0, window.scrollY + target * 0.045);
         }
       }
 
