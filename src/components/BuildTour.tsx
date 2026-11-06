@@ -40,12 +40,12 @@ export function BuildTour() {
     const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
     for (let i = 0; i < els.length; i++) {
       if (id !== run.current) return;
-      const el = els[i];
+      const el = els[i]!;
       const r = el.getBoundingClientRect();
       if (r.top < 80 || r.bottom > window.innerHeight - 80)
         window.scrollTo({ top: window.scrollY + r.top - window.innerHeight / 3, behavior: "smooth" });
       active.current = el;
-      setBox({ x: r.left, y: r.top, w: r.width, h: r.height, label: el.dataset.build || "" });
+      setBox({ x: r.left, y: r.top, w: r.width, h: r.height, label: el.dataset["build"] || "" });
       await wait(380);
       el.style.opacity = "1"; el.style.transform = "none";
       setProgress((i + 1) / els.length);
