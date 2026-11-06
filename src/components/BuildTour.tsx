@@ -89,6 +89,8 @@ export function BuildTour() {
     st.all.forEach(reset);
     st.queue = []; st.workers.forEach((w) => (w.job = null)); st.running = false;
     setDone(st.all.length); setElapsed((performance.now() - st.t0) / 1000); setPhase("done");
+    // build over: glide back up to the top of the page
+    window.setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" as ScrollBehavior }), 500);
   };
 
   useEffect(() => {
