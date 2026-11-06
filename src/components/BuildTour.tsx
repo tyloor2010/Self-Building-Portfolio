@@ -15,7 +15,17 @@ const FRAME = "nav,article,[data-frame]";
 
 type Kind = "text" | "img" | "frame" | "drag";
 type Job = { el: HTMLElement; kind: Kind; start: number; dur: number; lines: { t: number; b: number; l: number; r: number }[]; label: string };
-type Worker = { color: string; x: number; y: number; job: Job | null; cool: number };
+type Worker = { color: string; x: number; y: number; job: Job | null; cool: number; role: Role };
+type Role = { name: string; kinds: Kind[] };
+// Each agent owns one job type and sticks to it, working top-to-bottom.
+const ROLES: Role[] = [
+  { name: "Layout", kinds: ["frame"] },
+  { name: "Media", kinds: ["img", "drag"] },
+  { name: "Copy", kinds: ["text"] },
+  { name: "Copy", kinds: ["text"] },
+  { name: "Copy", kinds: ["text"] },
+];
+const LOOKAHEAD = 24;
 type Snap = { workers: { color: string; x: number; y: number; box: DOMRect | null; label: string; caret: { x: number; y: number; h: number } | null; kind: Kind | null }[]; idle: { x: number; y: number; c: string }[] };
 
 function kindOf(el: HTMLElement): Kind {
@@ -75,7 +85,7 @@ export function BuildTour() {
     all.forEach((el) => { el.style.opacity = "0"; });
     (main as HTMLElement).style.opacity = "1";
     st.all = all; st.queue = [...all]; st.done = 0; st.sim = 0; st.running = true; st.t0 = performance.now();
-    st.workers = Array.from({ length: WORKERS }, (_, i) => ({ color: COLORS[i % COLORS.length]!, x: window.innerWidth / 2, y: window.innerHeight + 40, job: null, cool: 0 }));
+    st.workers = Array.from({ length: WORKERS }, (_, i) => ({ color: COLORS[i % COLORS.length]!, x: window.innerWidth / 2, y: window.innerHeight + 40, job: null, cool: 0, role: ROLES[i % ROLES.length]! }));
     st.manual = false; st.pauseUntil = 0;
     window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
     setTotal(all.length); setDone(0); setPhase("building"); setTouring(true);
@@ -116,13 +126,18 @@ export function BuildTour() {
       if (st.running) {
         for (const w of st.workers) {
           if (!w.job && st.queue.length && st.sim >= w.cool) {
-            const el = st.queue.shift()!;
+            // take the next piece of *its own* job type, near the current build front
+            const lim = Math.min(LOOKAHEAD, st.queue.length);
+            let qi = -1;
+            for (let q = 0; q < lim; q++) if (w.role.kinds.includes(kindOf(st.queue[q]!))) { qi = q; break; }
+            if (qi < 0) { out.push({ color: w.color, x: w.x, y: w.y, box: null, label: "", caret: null, kind: null }); continue; }
+            const el = st.queue.splice(qi, 1)[0]!;
             const kind = kindOf(el);
             const len = (el.textContent || "").trim().length;
             const dur = kind === "text" ? Math.min(5600, Math.max(1100, len * 62)) : kind === "img" ? 3400 : kind === "drag" ? 2200 : 1500;
             el.style.opacity = "1";
             el.style.clipPath = "inset(0 100% 100% 0)";
-            w.job = { el, kind, start: st.sim + 520, dur, lines: kind === "text" ? measureLines(el) : [], label: NAMES[el.tagName] || "Layer" };
+            w.job = { el, kind, start: st.sim + 520, dur, lines: kind === "text" ? measureLines(el) : [], label: `${w.role.name} · ${NAMES[el.tagName] || "Layer"}` };
           }
           const j = w.job;
           if (!j) { out.push({ color: w.color, x: w.x, y: w.y, box: null, label: "", caret: null, kind: null }); continue; }
@@ -170,7 +185,7 @@ export function BuildTour() {
         }
       }
 
-      const idle = Array.from({ length: st.running ? 7 : 12 }, (_, i) => ({
+      const idle = Array.from({ length: 0 }, (_, i) => ({
         x: window.innerWidth / 2 + Math.sin(t * 0.3 + i * 1.7) * window.innerWidth * 0.42,
         y: window.innerHeight / 2 + Math.cos(t * 0.25 + i * 2.3) * window.innerHeight * 0.4,
         c: COLORS[i % COLORS.length]!,
