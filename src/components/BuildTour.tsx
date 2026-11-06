@@ -67,7 +67,7 @@ export function BuildTour() {
   useEffect(() => { s.current.speed = speed; }, [speed]);
   useEffect(() => { s.current.touring = touring; }, [touring]);
 
-  const reset = (el: HTMLElement) => { el.style.clipPath = ""; el.style.transform = ""; el.style.filter = ""; el.style.opacity = ""; };
+  const reset = (el: HTMLElement) => { el.style.clipPath = ""; el.style.transform = ""; el.style.filter = ""; el.style.opacity = ""; el.style.animation = ""; };
 
   const start = () => {
     const main = document.querySelector("main");
@@ -82,7 +82,7 @@ export function BuildTour() {
       const r = el.getBoundingClientRect();
       return r.width > 0 && r.height > 0;
     });
-    all.forEach((el) => { el.style.opacity = "0"; });
+    all.forEach((el) => { el.style.opacity = "0"; el.style.animation = "none"; });
     (main as HTMLElement).style.opacity = "1";
     st.all = all; st.queue = [...all]; st.done = 0; st.sim = 0; st.running = true; st.t0 = performance.now();
     st.workers = Array.from({ length: WORKERS }, (_, i) => ({ color: COLORS[i % COLORS.length]!, x: window.innerWidth / 2, y: window.innerHeight + 40, job: null, cool: 0, role: ROLES[i % ROLES.length]! }));
