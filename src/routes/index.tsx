@@ -7,12 +7,15 @@ import { BuildTour } from "@/components/BuildTour";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Mohamed Nasser — Portfolio" },
-      { name: "description", content: "Mohamed Nasser builds AI, computer vision and EdTech platforms — VisionTrack AI, SiderEdu, MouSaSAT, FireHarmonize and more." },
-      { property: "og:title", content: "Mohamed Nasser — Portfolio" },
-      { property: "og:description", content: "AI, computer vision and EdTech platforms by Mohamed Nasser." },
+      { title: "Mohamed Nasser — AI & EdTech Builder" },
+      { name: "description", content: "Portfolio of Mohamed Nasser: VisionTrack AI, Eagle Eye and DroneRoute AI for ITC-Egypt 2026, FireHarmonize for NASA Space Apps 2026, plus SiderEdu, MouSaSAT, Real SAT Prep, Sider IGCSE, STEM Egypt Hub and Step Education." },
+      { property: "og:title", content: "Mohamed Nasser — AI & EdTech Builder" },
+      { property: "og:description", content: "11 shipped projects across AI, computer vision, EdTech and satellite data — including VisionTrack AI, Eagle Eye, DroneRoute AI and FireHarmonize." },
       { property: "og:type", content: "website" },
+      { property: "og:image", content: "https://moonasserasssitee.lovable.app/og-image.png" },
+      { property: "og:image:alt", content: "MOHAMED. — AI & EdTech Builder, beside the site's black blob character on a red panel" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:image", content: "https://moonasserasssitee.lovable.app/og-image.png" },
     ],
   }),
   component: Index,
