@@ -77,7 +77,7 @@ export function BuildTour() {
     st.all = all; st.queue = [...all]; st.done = 0; st.sim = 0; st.running = true; st.t0 = performance.now();
     st.workers = Array.from({ length: WORKERS }, (_, i) => ({ color: COLORS[i % COLORS.length]!, x: window.innerWidth / 2, y: window.innerHeight + 40, job: null, cool: 0 }));
     st.manual = false; st.pauseUntil = 0;
-    window.scrollTo({ top: 0, behavior: "auto" });
+    window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
     setTotal(all.length); setDone(0); setPhase("building"); setTouring(true);
   };
 
@@ -89,6 +89,11 @@ export function BuildTour() {
   };
 
   useEffect(() => {
+    if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+    if (location.hash) history.replaceState(null, "", location.pathname + location.search);
+    document.documentElement.style.scrollBehavior = "auto";
+    window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
+    setTimeout(() => document.documentElement.classList.add("smooth"), 1000);
     const h = setTimeout(start, 300);
     const stopTour = () => {
       const st = s.current;

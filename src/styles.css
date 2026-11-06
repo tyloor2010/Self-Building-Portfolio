@@ -62,7 +62,7 @@
 
 @layer base {
   * { border-color: var(--color-border); }
-  html { scroll-behavior: smooth; }
+  html.smooth { scroll-behavior: smooth; }
   article, nav { border-width: 2px !important; border-radius: var(--radius); box-shadow: var(--shadow-brutal); }
   a.border, button.border { border-width: 2px; border-radius: 0.5rem; box-shadow: 3px 3px 0 var(--foreground); }
   a.bg-primary, button.bg-primary { border: 2px solid var(--foreground); border-radius: 0.5rem; box-shadow: 3px 3px 0 var(--foreground); }
