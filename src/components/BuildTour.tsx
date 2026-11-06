@@ -118,9 +118,13 @@ export function BuildTour() {
 
       if (st.running) {
         for (const w of st.workers) {
-          if (!w.job && st.queue.length && st.sim >= w.cool) {
+          if (!w.job && st.queue.length && st.sim >= w.cool && st.workers.every((o) => !o.job || o.job.el.closest("section,header,footer,nav") === st.queue[0]!.closest("section,header,footer,nav"))) {
             // look ahead a little for a layer that matches this agent's role; otherwise help with the next one
-            let idx = st.queue.slice(0, 8).findIndex((q) => w.role.kinds.includes(kindOf(q)));
+            // section by section: only take layers from the section currently being built
+            const sec = (q: HTMLElement) => q.closest("section,header,footer,nav");
+            const cur = sec(st.queue[0]!);
+            let n = 0; while (n < st.queue.length && sec(st.queue[n]!) === cur) n++;
+            let idx = st.queue.slice(0, Math.min(n, 8)).findIndex((q) => w.role.kinds.includes(kindOf(q)));
             if (idx < 0) idx = 0;
             const el = st.queue.splice(idx, 1)[0]!;
             const kind = kindOf(el);
