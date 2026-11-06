@@ -180,11 +180,18 @@ export function BuildTour() {
         }
       }
 
-      const idle = Array.from({ length: st.running ? 0 : 12 }, (_, i) => ({
-        x: window.innerWidth / 2 + Math.sin(t * 0.3 + i * 1.7) * window.innerWidth * 0.42,
-        y: window.innerHeight / 2 + Math.cos(t * 0.25 + i * 2.3) * window.innerHeight * 0.4,
-        c: COLORS[i % COLORS.length]!,
-      }));
+      // after the build: all agents gather into one flock that swirls in loops (like a murmuration)
+      const W = window.innerWidth, H = window.innerHeight;
+      const cx = W * 0.72 + Math.sin(t * 0.35) * W * 0.16, cy = H * 0.45 + Math.sin(t * 0.7) * H * 0.2;
+      const idle = Array.from({ length: st.running ? 0 : AGENTS }, (_, i) => {
+        const a = t * 1.6 + (i / AGENTS) * Math.PI * 2 * 0.55;
+        const rad = Math.min(W, H) * (0.07 + 0.03 * Math.sin(t * 1.3 + i));
+        return {
+          x: cx + Math.cos(a) * rad + Math.sin(t * 2.1 + i * 1.9) * 10,
+          y: cy + Math.sin(a) * rad * 1.3 + Math.cos(t * 1.8 + i * 2.7) * 10,
+          c: COLORS[i % COLORS.length]!,
+        };
+      });
       setSnap({ workers: out, idle });
       raf = requestAnimationFrame(loop);
     };
