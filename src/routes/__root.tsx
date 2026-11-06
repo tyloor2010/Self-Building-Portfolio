@@ -91,7 +91,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:title", content: "Mohamed Nasser — AI & EdTech Builder" },
       { name: "twitter:description", content: "AI, computer vision and learning platforms built for real people and real stakes." },
       { name: "twitter:image", content: "https://moonasserasssitee.lovable.app/og-image.png" },
-      { name: "theme-color", content: "#E31418" },
+      { name: "theme-color", content: "#060404" },
     ],
     links: [
       {
