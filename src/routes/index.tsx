@@ -48,7 +48,7 @@ function Hero() {
       <div className="@container min-w-0">
         <h1 data-build="H1 · Title" className="font-display text-outline text-[15cqw] leading-[0.85] tracking-tight">PORTFOLIO</h1>
         <p data-build="Script" className="mt-2 font-script text-4xl">Hello, I'm</p>
-        <span data-build="Name Block" className="mt-1 inline-block -rotate-2 rounded-lg border-2 border-foreground bg-accent px-4 py-1 font-display text-accent-foreground shadow-[4px_4px_0_var(--foreground)] text-[clamp(2rem,11vw,3rem)] md:text-6xl">{NAME}.</span>
+        <span data-build="Name Block" className="mt-1 inline-block bg-primary px-4 py-1 font-display text-primary-foreground text-4xl sm:text-5xl md:text-6xl">{NAME}.</span>
         <p data-build="Role Tag" className="mt-6 flex items-center gap-2 label-mono text-muted-foreground">
           <span className="h-2 w-2 rounded-full bg-primary" /> AI &amp; EdTech Builder
         </p>
@@ -122,7 +122,7 @@ function Flagships() {
       <h2 data-build="H2 · Flagships" className="mt-2 text-4xl font-extrabold tracking-tight md:text-5xl">Flagship Deployments</h2>
       <p className="mt-3 max-w-xl text-muted-foreground">AI, space data and learning platforms built for real people and real stakes.</p>
 
-      <div data-frame data-build="Core Card" className="mt-10 rounded-xl border-2 shadow-[6px_6px_0_var(--foreground)] bg-card p-6 md:p-10">
+      <div data-frame data-build="Core Card" className="mt-10 border bg-card p-6 md:p-10">
         <span className="bg-primary/15 px-2 py-1 label-mono text-primary">● AI / Computer Vision</span>
         <h3 className="mt-4 text-2xl font-extrabold md:text-3xl">VisionTrack AI — Finding Missing Persons</h3>
         <p className="mt-3 max-w-3xl text-muted-foreground">Finding missing persons faster, smarter, safer. Built for ITC-Egypt 2026, VisionTrack uses AI and computer vision to turn camera feeds into real leads when every minute matters.</p>
@@ -191,7 +191,7 @@ function Matrix() {
           <button key={c} onClick={() => setF(c)} className={`px-3 py-1.5 font-mono text-[11px] transition ${f === c ? "bg-primary text-primary-foreground" : "border text-muted-foreground hover:text-foreground"}`}>{c}</button>
         ))}
       </div>
-      <div data-build="Matrix Grid" className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      <div data-build="Matrix Grid" className="mt-8 grid gap-px border bg-border sm:grid-cols-2 lg:grid-cols-3">
         {MATRIX.filter((m) => f === "All" || m[0] === f).map(([c, t, d, url], i) => (
           <article key={t} className="animate-rise bg-card p-6 transition hover:bg-accent">
             <div className="flex justify-between"><span className="label-mono text-primary">{c}</span><span className="font-mono text-[10px] text-muted-foreground">0{i + 1}</span></div>
@@ -233,7 +233,7 @@ function Contact() {
           <a key={l} href={href} target="_blank" rel="noreferrer" className="flex items-center gap-2 border px-3 py-2 text-xs text-muted-foreground transition hover:border-primary hover:text-foreground"><Icon className="h-3.5 w-3.5" />{l}</a>
         ))}
       </div>
-      <div data-build="Store" className="mt-10 rounded-xl border-2 shadow-[6px_6px_0_var(--foreground)] bg-card p-6 text-left">
+      <div data-build="Store" className="mt-10 border bg-card p-6 text-left">
         <p className="flex items-center gap-2 label-mono text-primary"><ShoppingBag className="h-3.5 w-3.5" /> Store</p>
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
           {[["How to Get 1300+ on the SAT", "https://moonasser.gumroad.com/l/upechg"], ["How to Write a Perfect Essay", "https://moonasser.gumroad.com/l/ztinid"]].map(([t, h]) => (

@@ -5,9 +5,9 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-display: "Archivo Black", sans-serif;
-  --font-script: "Permanent Marker", cursive;
-  --font-sans: "Inter", sans-serif;
+  --font-display: "Anton", sans-serif;
+  --font-script: "Caveat", cursive;
+  --font-sans: "Manrope", sans-serif;
   --font-mono: "JetBrains Mono", monospace;
   --radius-sm: calc(var(--radius) - 2px);
   --radius-md: var(--radius);
@@ -35,7 +35,7 @@
 }
 
 :root {
-  --radius: 0.75rem;
+  --radius: 0.25rem;
   --background: oklch(0.11 0.005 30);
   --foreground: oklch(0.96 0.005 60);
   --card: oklch(0.14 0.008 30);
@@ -56,16 +56,12 @@
   --input: oklch(0.24 0.012 30);
   --ring: oklch(0.64 0.22 30);
   --signal: oklch(0.72 0.15 235);
-  --shadow-brutal: 4px 4px 0 var(--foreground);
   --glow: radial-gradient(60% 50% at 50% 30%, color-mix(in oklab, var(--primary) 18%, transparent), transparent 70%);
 }
 
 @layer base {
   * { border-color: var(--color-border); }
   html.smooth { scroll-behavior: smooth; }
-  article, nav { border-width: 2px !important; border-radius: var(--radius); box-shadow: var(--shadow-brutal); }
-  a.border, button.border { border-width: 2px; border-radius: 0.5rem; box-shadow: 3px 3px 0 var(--foreground); }
-  a.bg-primary, button.bg-primary { border: 2px solid var(--foreground); border-radius: 0.5rem; box-shadow: 3px 3px 0 var(--foreground); }
   body {
     background: var(--glow), var(--color-background);
     background-attachment: fixed;
