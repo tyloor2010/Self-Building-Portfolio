@@ -46,7 +46,7 @@ function Hero() {
   return (
     <section className="relative mx-auto grid min-h-screen max-w-7xl items-center gap-10 px-6 pt-24 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] xl:grid-cols-[minmax(0,1.2fr)_minmax(0,0.9fr)_minmax(0,0.8fr)]">
       <div className="@container min-w-0">
-        <h1 data-build="H1 · Title" className="font-display text-outline text-[15cqw] leading-[0.85] tracking-tight">PORTFOLIO</h1>
+        <h1 data-build="H1 · Title" className="font-display text-outline text-[24cqw] lg:text-[15cqw] leading-[0.85] tracking-tight">PORTFOLIO</h1>
         <p data-build="Script" className="mt-2 font-script text-4xl">Hello, I'm</p>
         <span data-build="Name Block" className="mt-1 inline-block bg-primary px-4 py-1 font-display text-primary-foreground text-4xl sm:text-5xl md:text-6xl">{NAME}.</span>
         <p data-build="Role Tag" className="mt-6 flex items-center gap-2 label-mono text-muted-foreground">
