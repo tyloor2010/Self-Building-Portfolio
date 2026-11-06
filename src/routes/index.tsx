@@ -186,7 +186,7 @@ function Matrix() {
           <button key={c} onClick={() => setF(c)} className={`px-3 py-1.5 font-mono text-[11px] transition ${f === c ? "bg-primary text-primary-foreground" : "border text-muted-foreground hover:text-foreground"}`}>{c}</button>
         ))}
       </div>
-      <div data-build="Matrix Grid" className="mt-8 grid gap-px border bg-border sm:grid-cols-2 lg:grid-cols-3">
+      <div data-build="Matrix Grid" className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {MATRIX.filter((m) => f === "All" || m[0] === f).map(([c, t, d, url], i) => (
           <article key={t} className="animate-rise bg-card p-6 transition hover:bg-accent">
             <div className="flex justify-between"><span className="label-mono text-primary">{c}</span><span className="font-mono text-[10px] text-muted-foreground">0{i + 1}</span></div>
