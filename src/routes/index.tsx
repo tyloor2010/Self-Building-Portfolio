@@ -41,7 +41,7 @@ function Label({ children }: { children: React.ReactNode }) {
 
 function Hero() {
   return (
-    <section className="relative mx-auto grid min-h-screen max-w-7xl items-center gap-10 px-6 pt-24 lg:grid-cols-[1.3fr_1fr]">
+    <section className="relative mx-auto grid min-h-screen max-w-7xl items-center gap-10 px-6 pt-24 lg:grid-cols-[1.3fr_1fr] xl:grid-cols-[1.2fr_0.9fr_0.8fr]">
       <div>
         <h1 data-build="H1 · Title" className="font-display text-outline text-[clamp(4rem,13vw,11rem)] leading-[0.85] tracking-tight">PORTFOLIO</h1>
         <p data-build="Script" className="mt-2 font-script text-4xl">Hello, I'm</p>
@@ -63,10 +63,20 @@ function Hero() {
           ))}
         </div>
       </div>
-      <div data-build="Portrait" className="relative mx-auto w-full max-w-sm">
+      <div data-frame data-build="Portrait" className="relative mx-auto w-full max-w-sm">
         <div className="absolute -inset-3 border border-primary/40" />
         <img src={portrait} alt={`Portrait of ${NAME}`} width={768} height={960} className="relative w-full" />
         <span className="absolute -bottom-3 left-4 bg-background px-2 py-1 label-mono text-primary">● Sovereign silicon active</span>
+      </div>
+      <div className="hidden space-y-4 xl:block">
+        {[["01.", "Autonomous Core", "Local agents + self-hosted models. Zero cloud lock-in.", "RUNTIME"], ["02.", "Sub-50ms Event Loops", "Quantitative execution engines and real-time pipelines.", "EXECUTION"], ["03.", "Product Systems", "Mobile and web products shipped end to end.", "PRODUCT"]].map(([n, t, d, tag]) => (
+          <article key={n} className="border bg-card/60 p-4">
+            <div className="flex justify-between"><span className="font-mono text-[10px] text-muted-foreground">{n}</span><span className="label-mono text-muted-foreground">{tag}</span></div>
+            <h3 className="mt-2 font-bold">{t}</h3>
+            <p className="mt-1 text-xs text-muted-foreground">{d}</p>
+          </article>
+        ))}
+        <p className="font-mono text-[10px] text-muted-foreground">Solidity · ERC · FastAPI · Next.js · Docker · Rust</p>
       </div>
     </section>
   );
@@ -112,7 +122,7 @@ function Flagships() {
       <h2 data-build="H2 · Flagships" className="mt-2 text-4xl font-extrabold tracking-tight md:text-5xl">Flagship Deployments</h2>
       <p className="mt-3 max-w-xl text-muted-foreground">Production-grade systems running 24/7 across local silicon, blockchain mainnets and commercial endpoints.</p>
 
-      <div data-build="Core Card" className="mt-10 border bg-card p-6 md:p-10">
+      <div data-frame data-build="Core Card" className="mt-10 border bg-card p-6 md:p-10">
         <span className="bg-primary/15 px-2 py-1 label-mono text-primary">● Core ecosystem</span>
         <h3 className="mt-4 text-2xl font-extrabold md:text-3xl">NOVA — 7-Layer Autonomous AI Ecosystem</h3>
         <p className="mt-3 max-w-3xl text-muted-foreground">A persistent, self-evolving intelligence operating 24/7 on local silicon. Engineered without external startup frameworks, with redundant memory and a continuous reflection loop.</p>
@@ -216,7 +226,7 @@ function Contact() {
 
 function Index() {
   return (
-    <main className="relative overflow-x-hidden">
+    <main className="relative overflow-x-hidden opacity-0">
       <Nav />
       <Hero />
       <About />
