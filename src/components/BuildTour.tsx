@@ -52,7 +52,7 @@ export function BuildTour() {
   const [elapsed, setElapsed] = useState(0);
   const [speed, setSpeed] = useState(1);
   const [touring, setTouring] = useState(true);
-  const s = useRef({ queue: [] as HTMLElement[], all: [] as HTMLElement[], workers: [] as Worker[], sim: 0, done: 0, running: false, speed: 1, touring: true, t0: 0 });
+  const s = useRef({ queue: [] as HTMLElement[], all: [] as HTMLElement[], workers: [] as Worker[], sim: 0, done: 0, running: false, speed: 1, touring: true, t0: 0, pauseUntil: 0, manual: false });
 
   useEffect(() => { s.current.speed = speed; }, [speed]);
   useEffect(() => { s.current.touring = touring; }, [touring]);
@@ -76,7 +76,8 @@ export function BuildTour() {
     (main as HTMLElement).style.opacity = "1";
     st.all = all; st.queue = [...all]; st.done = 0; st.sim = 0; st.running = true; st.t0 = performance.now();
     st.workers = Array.from({ length: WORKERS }, (_, i) => ({ color: COLORS[i % COLORS.length]!, x: window.innerWidth / 2, y: window.innerHeight + 40, job: null, cool: 0 }));
-    window.scrollTo({ top: 0 });
+    st.manual = false; st.pauseUntil = 0;
+    window.scrollTo({ top: 0, behavior: "auto" });
     setTotal(all.length); setDone(0); setPhase("building"); setTouring(true);
   };
 
@@ -89,7 +90,12 @@ export function BuildTour() {
 
   useEffect(() => {
     const h = setTimeout(start, 300);
-    const stopTour = () => setTouring(false);
+    const stopTour = () => {
+      const st = s.current;
+      if (st.manual) return;
+      st.pauseUntil = performance.now() + 3500;
+      if (st.touring) setTouring(false);
+    };
     window.addEventListener("wheel", stopTour, { passive: true });
     window.addEventListener("touchmove", stopTour, { passive: true });
     let raf = 0, last = performance.now();
@@ -97,9 +103,10 @@ export function BuildTour() {
       const st = s.current;
       const dt = Math.min(50, now - last) * st.speed; last = now;
       st.sim += dt;
+      if (!st.touring && !st.manual && st.pauseUntil && now > st.pauseUntil) { st.pauseUntil = 0; setTouring(true); }
       const t = now / 1000;
       const out: Snap["workers"] = [];
-      let lowest = Infinity;
+      let lowest = -Infinity;
 
       if (st.running) {
         for (const w of st.workers) {
@@ -143,7 +150,7 @@ export function BuildTour() {
           // cursor flies toward its target
           const k = st.sim < j.start ? 0.08 : 0.24;
           w.x += (tx - w.x) * k; w.y += (ty - w.y) * k;
-          lowest = Math.min(lowest, r.top);
+          lowest = Math.max(lowest, r.bottom);
           out.push({ color: w.color, x: w.x, y: w.y, box: r, label: j.label, caret: j.kind === "text" && st.sim >= j.start ? caret : null, kind: j.kind });
 
           if (p >= 1) { reset(j.el); w.job = null; w.cool = st.sim + 320; st.done++; }
@@ -152,9 +159,9 @@ export function BuildTour() {
         if (!st.queue.length && st.workers.every((w) => !w.job)) finish();
 
         // auto-scroll ("Touring") — keep the active work in view
-        if (st.touring && lowest !== Infinity) {
-          const target = lowest - window.innerHeight * 0.35;
-          if (Math.abs(target) > 4) window.scrollTo(0, window.scrollY + target * 0.045);
+        if (st.touring && lowest !== -Infinity) {
+          const delta = lowest - window.innerHeight * 0.72;
+          if (Math.abs(delta) > 6) window.scrollTo({ top: window.scrollY + delta * 0.12, behavior: "auto" });
         }
       }
 
@@ -207,7 +214,7 @@ export function BuildTour() {
             <span className="whitespace-nowrap"><b>{AGENTS}</b> agents</span>
             <span className="hidden whitespace-nowrap text-muted-foreground sm:inline"><b className="text-foreground">{done}</b> / {total} layers</span>
             <span className="hidden h-1 w-16 overflow-hidden rounded-full bg-muted sm:block"><span className="block h-full bg-signal" style={{ width: `${total ? (done / total) * 100 : 0}%` }} /></span>
-            <button onClick={() => setTouring((v) => !v)} className={`rounded-full px-2 py-0.5 ${touring ? "bg-signal/20 text-signal" : "text-muted-foreground"}`}>Touring</button>
+            <button onClick={() => { s.current.manual = true; setTouring((v) => !v); }} className={`rounded-full px-2 py-0.5 ${touring ? "bg-signal/20 text-signal" : "text-muted-foreground"}`}>Touring</button>
             <button onClick={() => setSpeed((v) => (v === 1 ? 2 : v === 2 ? 4 : 1))} className="rounded-full px-1.5 py-0.5 text-muted-foreground hover:text-foreground">{speed}x</button>
             <Volume2 className="hidden h-3 w-3 text-muted-foreground sm:block" />
             <button onClick={finish} aria-label="Skip" className="text-muted-foreground hover:text-foreground"><FastForward className="h-3 w-3" /></button>
