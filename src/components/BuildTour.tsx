@@ -93,7 +93,7 @@ export function BuildTour() {
     if (location.hash) history.replaceState(null, "", location.pathname + location.search);
     document.documentElement.style.scrollBehavior = "auto";
     window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
-    document.documentElement.style.scrollBehavior = "";
+    setTimeout(() => document.documentElement.classList.add("smooth"), 1000);
     const h = setTimeout(start, 300);
     const stopTour = () => {
       const st = s.current;
