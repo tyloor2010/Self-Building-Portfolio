@@ -41,9 +41,9 @@ function Label({ children }: { children: React.ReactNode }) {
 
 function Hero() {
   return (
-    <section className="relative mx-auto grid min-h-screen max-w-7xl items-center gap-10 px-6 pt-24 lg:grid-cols-[1.3fr_1fr] xl:grid-cols-[1.2fr_0.9fr_0.8fr]">
-      <div>
-        <h1 data-build="H1 · Title" className="font-display text-outline text-[clamp(4rem,13vw,11rem)] leading-[0.85] tracking-tight">PORTFOLIO</h1>
+    <section className="relative mx-auto grid min-h-screen max-w-7xl items-center gap-10 px-6 pt-24 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] xl:grid-cols-[minmax(0,1.2fr)_minmax(0,0.9fr)_minmax(0,0.8fr)]">
+      <div className="@container min-w-0">
+        <h1 data-build="H1 · Title" className="font-display text-outline text-[15cqw] leading-[0.85] tracking-tight">PORTFOLIO</h1>
         <p data-build="Script" className="mt-2 font-script text-4xl">Hello, I'm</p>
         <span data-build="Name Block" className="mt-1 inline-block -rotate-2 rounded-lg border-2 border-foreground bg-accent px-4 py-1 font-display text-accent-foreground shadow-[4px_4px_0_var(--foreground)] text-5xl md:text-6xl">{NAME}.</span>
         <p data-build="Role Tag" className="mt-6 flex items-center gap-2 label-mono text-muted-foreground">
