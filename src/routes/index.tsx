@@ -94,7 +94,7 @@ function About() {
   );
 }
 
-const LAYERS = [
+const LAYERS: [string, string, string][] = [
   ["L1: Core Engine", "Uncensored Base Foundation", "Local model inference running natively on a dedicated GPU workstation."],
   ["L2: Dynamic Tools", "Tool Orchestration", "Hundreds of custom tools exposed through a unified protocol."],
   ["L3: Voice Synthesis", "Voice Interface", "Real-time speech in and out with sub-second latency."],
@@ -155,7 +155,7 @@ function Flagships() {
   );
 }
 
-const MATRIX = [
+const MATRIX: [string, string, string][] = [
   ["Autonomous AI", "Multi-LLM Parliament Architecture", "Cognitive assembly of personality shards engaging in structured debate and voting."],
   ["Machine Learning", "Time Series Forecaster", "Production forecasting service with a live dashboard."],
   ["Deep Learning", "Dynamical Latent Field Model", "Experimental physics-inspired latent architecture."],
