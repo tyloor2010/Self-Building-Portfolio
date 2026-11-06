@@ -5,9 +5,9 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-display: "Anton", sans-serif;
-  --font-script: "Caveat", cursive;
-  --font-sans: "Manrope", sans-serif;
+  --font-display: "Archivo Black", sans-serif;
+  --font-script: "Permanent Marker", cursive;
+  --font-sans: "Inter", sans-serif;
   --font-mono: "JetBrains Mono", monospace;
   --radius-sm: calc(var(--radius) - 2px);
   --radius-md: var(--radius);
@@ -35,33 +35,37 @@
 }
 
 :root {
-  --radius: 0.25rem;
-  --background: oklch(0.11 0.005 30);
-  --foreground: oklch(0.96 0.005 60);
-  --card: oklch(0.14 0.008 30);
-  --card-foreground: oklch(0.96 0.005 60);
-  --popover: oklch(0.14 0.008 30);
-  --popover-foreground: oklch(0.96 0.005 60);
-  --primary: oklch(0.64 0.22 30);
-  --primary-foreground: oklch(0.98 0 0);
-  --secondary: oklch(0.18 0.01 30);
-  --secondary-foreground: oklch(0.96 0.005 60);
-  --muted: oklch(0.18 0.01 30);
-  --muted-foreground: oklch(0.62 0.01 40);
-  --accent: oklch(0.2 0.03 30);
-  --accent-foreground: oklch(0.96 0.005 60);
-  --destructive: oklch(0.6 0.24 27);
-  --destructive-foreground: oklch(0.98 0 0);
-  --border: oklch(0.24 0.012 30);
-  --input: oklch(0.24 0.012 30);
-  --ring: oklch(0.64 0.22 30);
-  --signal: oklch(0.72 0.15 235);
-  --glow: radial-gradient(60% 50% at 50% 30%, color-mix(in oklab, var(--primary) 18%, transparent), transparent 70%);
+  --radius: 0.75rem;
+  --background: oklch(0.985 0.003 100);
+  --foreground: oklch(0.17 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.17 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.17 0 0);
+  --primary: oklch(0.58 0.23 28);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.17 0 0);
+  --secondary-foreground: oklch(0.985 0.003 100);
+  --muted: oklch(0.94 0.004 100);
+  --muted-foreground: oklch(0.45 0 0);
+  --accent: oklch(0.84 0.17 80);
+  --accent-foreground: oklch(0.17 0 0);
+  --destructive: oklch(0.58 0.23 28);
+  --destructive-foreground: oklch(1 0 0);
+  --border: oklch(0.17 0 0);
+  --input: oklch(0.17 0 0);
+  --ring: oklch(0.58 0.23 28);
+  --signal: oklch(0.58 0.23 28);
+  --shadow-brutal: 4px 4px 0 var(--foreground);
+  --glow: none;
 }
 
 @layer base {
   * { border-color: var(--color-border); }
   html { scroll-behavior: smooth; }
+  article, nav { border-width: 2px !important; border-radius: var(--radius); box-shadow: var(--shadow-brutal); }
+  a.border, button.border { border-width: 2px; border-radius: 0.5rem; box-shadow: 3px 3px 0 var(--foreground); }
+  a.bg-primary, button.bg-primary { border: 2px solid var(--foreground); border-radius: 0.5rem; box-shadow: 3px 3px 0 var(--foreground); }
   body {
     background: var(--glow), var(--color-background);
     background-attachment: fixed;
