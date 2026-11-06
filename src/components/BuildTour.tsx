@@ -89,6 +89,11 @@ export function BuildTour() {
   };
 
   useEffect(() => {
+    if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+    if (location.hash) history.replaceState(null, "", location.pathname + location.search);
+    document.documentElement.style.scrollBehavior = "auto";
+    window.scrollTo(0, 0);
+    document.documentElement.style.scrollBehavior = "";
     const h = setTimeout(start, 300);
     const stopTour = () => {
       const st = s.current;
