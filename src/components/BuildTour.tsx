@@ -150,7 +150,7 @@ export function BuildTour() {
           // cursor flies toward its target
           const k = st.sim < j.start ? 0.08 : 0.24;
           w.x += (tx - w.x) * k; w.y += (ty - w.y) * k;
-          lowest = Math.max(lowest, r.bottom);
+          lowest = Math.max(lowest, w.y);
           out.push({ color: w.color, x: w.x, y: w.y, box: r, label: j.label, caret: j.kind === "text" && st.sim >= j.start ? caret : null, kind: j.kind });
 
           if (p >= 1) { reset(j.el); w.job = null; w.cool = st.sim + 320; st.done++; }
@@ -160,8 +160,8 @@ export function BuildTour() {
 
         // auto-scroll ("Touring") — keep the active work in view
         if (st.touring && lowest !== -Infinity) {
-          const delta = lowest - window.innerHeight * 0.72;
-          if (Math.abs(delta) > 6) window.scrollTo({ top: window.scrollY + delta * 0.12, behavior: "auto" });
+          const delta = lowest - window.innerHeight * 0.6;
+          if (Math.abs(delta) > 2) window.scrollTo({ top: window.scrollY + delta * 0.18, behavior: "instant" as ScrollBehavior });
         }
       }
 
