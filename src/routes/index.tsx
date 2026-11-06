@@ -129,9 +129,9 @@ function Flagships() {
           ))}
         </div>
         <div key={layer} className="mt-5 animate-rise border-l-2 border-primary bg-background/50 p-5">
-          <p className="label-mono text-primary">Layer 0{layer + 1} // {LAYERS[layer][0].split(": ")[1]}</p>
-          <p className="mt-1 text-lg font-bold">{LAYERS[layer][1]}</p>
-          <p className="text-sm text-muted-foreground">{LAYERS[layer][2]}</p>
+          <p className="label-mono text-primary">Layer 0{layer + 1} // {LAYERS[layer]![0].split(": ")[1]}</p>
+          <p className="mt-1 text-lg font-bold">{LAYERS[layer]![1]}</p>
+          <p className="text-sm text-muted-foreground">{LAYERS[layer]![2]}</p>
         </div>
       </div>
 
