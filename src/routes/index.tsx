@@ -26,7 +26,7 @@ function Nav() {
     <nav className="fixed left-1/2 top-4 z-50 flex -translate-x-1/2 items-center gap-1 rounded-full border bg-card/80 px-2 py-1.5 backdrop-blur">
       <span className="grid h-6 w-6 place-items-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">M</span>
       {["About", "Flagships", "Projects", "Contact"].map((l) => (
-        <a key={l} href={`#${l === "Projects" ? "matrix" : l.toLowerCase()}`} className="rounded-full px-3 py-1 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground">{l}</a>
+        <a key={l} href={`#${l === "Projects" ? "matrix" : l.toLowerCase()}`} className="rounded-full px-2 py-1 text-[11px] sm:px-3 sm:text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground">{l}</a>
       ))}
       <span className="ml-2 hidden items-center gap-1.5 pr-2 label-mono text-signal sm:flex">
         <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-signal" /> Available
@@ -45,7 +45,7 @@ function Hero() {
       <div className="@container min-w-0">
         <h1 data-build="H1 · Title" className="font-display text-outline text-[15cqw] leading-[0.85] tracking-tight">PORTFOLIO</h1>
         <p data-build="Script" className="mt-2 font-script text-4xl">Hello, I'm</p>
-        <span data-build="Name Block" className="mt-1 inline-block -rotate-2 rounded-lg border-2 border-foreground bg-accent px-4 py-1 font-display text-accent-foreground shadow-[4px_4px_0_var(--foreground)] text-5xl md:text-6xl">{NAME}.</span>
+        <span data-build="Name Block" className="mt-1 inline-block -rotate-2 rounded-lg border-2 border-foreground bg-accent px-4 py-1 font-display text-accent-foreground shadow-[4px_4px_0_var(--foreground)] text-[clamp(2rem,11vw,3rem)] md:text-6xl">{NAME}.</span>
         <p data-build="Role Tag" className="mt-6 flex items-center gap-2 label-mono text-muted-foreground">
           <span className="h-2 w-2 rounded-full bg-primary" /> AI &amp; EdTech Builder
         </p>
@@ -57,7 +57,7 @@ function Hero() {
           <a href="#contact" className="flex items-center gap-2 bg-primary px-5 py-3 label-mono text-primary-foreground transition hover:brightness-110">Get in touch <ArrowRight className="h-3.5 w-3.5" /></a>
           <a href="#flagships" className="border px-5 py-3 label-mono transition hover:border-primary hover:text-primary">See projects</a>
         </div>
-        <div data-build="Stats" className="mt-12 flex gap-10">
+        <div data-build="Stats" className="mt-12 flex flex-wrap gap-x-10 gap-y-6">
           {[["9", "Projects"], ["6", "EdTech platforms"], ["2", "Competitions"]].map(([n, l]) => (
             <div key={l}><p className="font-display text-3xl text-primary">{n}</p><p className="label-mono text-muted-foreground">{l}</p></div>
           ))}
