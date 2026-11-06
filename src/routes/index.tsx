@@ -58,7 +58,7 @@ function Hero() {
           <a href="#flagships" className="border px-5 py-3 label-mono transition hover:border-primary hover:text-primary">See projects</a>
         </div>
         <div data-build="Stats" className="mt-12 flex flex-wrap gap-x-10 gap-y-6">
-          {[["9", "Projects"], ["6", "EdTech platforms"], ["2", "Competitions"]].map(([n, l]) => (
+          {[["11", "Projects"], ["6", "EdTech platforms"], ["2", "Competitions"]].map(([n, l]) => (
             <div key={l}><p className="font-display text-3xl text-primary">{n}</p><p className="label-mono text-muted-foreground">{l}</p></div>
           ))}
         </div>
@@ -165,6 +165,8 @@ function Flagships() {
 const MATRIX: [string, string, string, string?][] = [
   ["AI / Computer Vision", "VisionTrack AI", "Finding missing persons faster, smarter, safer. Built for ITC-Egypt 2026."],
   ["AI / Computer Vision", "VisionTrack AI v2", "Search & Match — matches faces across camera feeds in real time."],
+  ["AI / Computer Vision", "Eagle Eye", "ITC 2026 Egypt Edition project — smart detection & tracking system with a precision targeting vision."],
+  ["AI / Computer Vision", "DroneRoute AI", "ITC 2026 Egypt Edition project — AI-powered drone routing and navigation for smart aerial missions."],
   ["EdTech Platform", "SiderEdu", "An online learning platform, \"your next step in learning.\"", "https://sideredu.com"],
   ["EdTech Platform", "MouSaSAT", "A dedicated SAT prep website with organized content and practice resources.", "https://mousasat.com"],
   ["EdTech Platform", "Real SAT Prep", "Real practice, real prep — a hub for serious SAT preparation.", "https://realsatprep.com"],
